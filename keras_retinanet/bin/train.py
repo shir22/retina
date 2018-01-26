@@ -49,7 +49,7 @@ def get_session():
     return tf.Session(config=config)
 
 
-def create_models(num_classes, weights='imagenet', multi_gpu=0):
+def create_models(num_classes, alpha=0.25, gamma=2.0, weights='imagenet', multi_gpu=0):
     # create "base" model (no NMS)
 
     # Keras recommends initialising a multi-gpu model on the CPU to ease weight sharing, and to prevent OOM errors.
@@ -74,7 +74,7 @@ def create_models(num_classes, weights='imagenet', multi_gpu=0):
     training_model.compile(
         loss={
             'regression'    : losses.smooth_l1(),
-            'classification': losses.focal()
+            'classification': losses.focal(alpha=alpha, gamma=gamma)
         },
         optimizer=keras.optimizers.adam(lr=1e-5, clipnorm=0.001)
     )
@@ -221,6 +221,9 @@ def parse_args(args):
     parser.add_argument('--no-snapshots',  help='Disable saving snapshots.', dest='snapshots', action='store_false')
     parser.add_argument('--no-evaluation', help='Disable per epoch evaluation.', dest='evaluation', action='store_false')
 
+    parser.add_argument('--gamma', help='Gamma value for focal loss.', type=float, default=2.0)
+    parser.add_argument('--alpha', help='Alpha value for focal loss.', type=float, default=0.25)    
+
     return check_args(parser.parse_args(args))
 
 
@@ -249,7 +252,8 @@ def main(args=None):
         prediction_model = model
     else:
         print('Creating model, this may take a second...')
-        model, training_model, prediction_model = create_models(num_classes=train_generator.num_classes(), weights=args.weights, multi_gpu=args.multi_gpu)
+        model, training_model, prediction_model = create_models(num_classes=train_generator.num_classes(), \
+         alpha=args.alpha, gamma=args.gamma, weights=args.weights, multi_gpu=args.multi_gpu)
 
     # print model summary
     print(model.summary())
