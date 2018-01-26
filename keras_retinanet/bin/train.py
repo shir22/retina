@@ -49,14 +49,14 @@ def get_session():
     return tf.Session(config=config)
 
 
-def create_models(num_classes, weights='imagenet', multi_gpu=0):
+def create_models(num_classes, weights='imagenet', multi_gpu=0, freeze_backbone=False):
     # create "base" model (no NMS)
 
     # Keras recommends initialising a multi-gpu model on the CPU to ease weight sharing, and to prevent OOM errors.
     # optionally wrap in a parallel model
     if multi_gpu > 1:
         with tf.device('/cpu:0'):
-            model = resnet50_retinanet(num_classes, weights=weights, nms=False)
+            model = resnet50_retinanet(num_classes, weights=weights, nms=False, freeze_backbone=freeze_backbone)
         training_model = multi_gpu_model(model, gpus=multi_gpu)
 
         # append NMS for prediction only
@@ -66,7 +66,7 @@ def create_models(num_classes, weights='imagenet', multi_gpu=0):
         detections       = layers.NonMaximumSuppression(name='nms')([boxes, classification, detections])
         prediction_model = keras.models.Model(inputs=model.inputs, outputs=model.outputs[:2] + [detections])
     else:
-        model            = resnet50_retinanet(num_classes, weights=weights, nms=True)
+        model            = resnet50_retinanet(num_classes, weights=weights, nms=True, freeze_backbone=freeze_backbone)
         training_model   = model
         prediction_model = model
 
@@ -212,14 +212,15 @@ def parse_args(args):
     group.add_argument('--weights',  help='Weights to use for initialization (defaults to \'imagenet\').', default='imagenet')
     group.add_argument('--snapshot', help='Snapshot to resume training with.')
 
-    parser.add_argument('--batch-size',    help='Size of the batches.', default=1, type=int)
-    parser.add_argument('--gpu',           help='Id of the GPU to use (as reported by nvidia-smi).')
-    parser.add_argument('--multi-gpu',     help='Number of GPUs to use for parallel processing.', type=int, default=0)
-    parser.add_argument('--epochs',        help='Number of epochs to train.', type=int, default=50)
-    parser.add_argument('--steps',         help='Number of steps per epoch.', type=int, default=10000)
-    parser.add_argument('--snapshot-path', help='Path to store snapshots of models during training (defaults to \'./snapshots\')', default='./snapshots')
-    parser.add_argument('--no-snapshots',  help='Disable saving snapshots.', dest='snapshots', action='store_false')
-    parser.add_argument('--no-evaluation', help='Disable per epoch evaluation.', dest='evaluation', action='store_false')
+    parser.add_argument('--batch-size',      help='Size of the batches.', default=1, type=int)
+    parser.add_argument('--gpu',             help='Id of the GPU to use (as reported by nvidia-smi).')
+    parser.add_argument('--multi-gpu',       help='Number of GPUs to use for parallel processing.', type=int, default=0)
+    parser.add_argument('--epochs',          help='Number of epochs to train.', type=int, default=50)
+    parser.add_argument('--steps',           help='Number of steps per epoch.', type=int, default=10000)
+    parser.add_argument('--snapshot-path',   help='Path to store snapshots of models during training (defaults to \'./snapshots\')', default='./snapshots')
+    parser.add_argument('--no-snapshots',    help='Disable saving snapshots.', dest='snapshots', action='store_false')
+    parser.add_argument('--no-evaluation',   help='Disable per epoch evaluation.', dest='evaluation', action='store_false')
+    parser.add_argument('--freeze-backbone', help='Freeze training of backbone layers..', action='store_true')
 
     return check_args(parser.parse_args(args))
 
@@ -249,7 +250,12 @@ def main(args=None):
         prediction_model = model
     else:
         print('Creating model, this may take a second...')
-        model, training_model, prediction_model = create_models(num_classes=train_generator.num_classes(), weights=args.weights, multi_gpu=args.multi_gpu)
+        model, training_model, prediction_model = create_models(
+            num_classes=train_generator.num_classes(),
+            weights=args.weights,
+            multi_gpu=args.multi_gpu,
+            freeze_backbone=args.freeze_backbone
+        )
 
     # print model summary
     print(model.summary())
