@@ -224,6 +224,8 @@ def parse_args(args):
     parser.add_argument('--gamma', help='Gamma value for focal loss.', type=float, default=2.0)
     parser.add_argument('--alpha', help='Alpha value for focal loss.', type=float, default=0.25)    
 
+    parser.add_argument('--initial-epoch', help='Number of epoch for training start', type=int, default=0)
+
     return check_args(parser.parse_args(args))
 
 
@@ -274,6 +276,7 @@ def main(args=None):
         epochs=args.epochs,
         verbose=1,
         callbacks=callbacks,
+        initial_epoch=arg.initial_epoch,
     )
 
 if __name__ == '__main__':
