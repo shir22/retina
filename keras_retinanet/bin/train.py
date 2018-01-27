@@ -220,7 +220,7 @@ def parse_args(args):
     parser.add_argument('--epochs',        help='Number of epochs to train.', type=int, default=200)
     parser.add_argument('--steps',         help='Number of steps per epoch.', type=int, default=2500)
     parser.add_argument('--snapshot-path', help='Path to store snapshots of models during training (defaults to \'./snapshots\')', default='./snapshots')
-    parser.add_argument('--model-save-period', help='Number of epochs difference for saving model snapshot', dest='period', default=4)
+    parser.add_argument('--model-save-period', help='Number of epochs difference for saving model snapshot', dest='period', type=int, default=4)
     parser.add_argument('--no-snapshots',  help='Disable saving snapshots.', dest='snapshots', action='store_false')
     parser.add_argument('--with-evaluation', help='Enable per epoch evaluation.', dest='evaluation', action='store_true')
 
