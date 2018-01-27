@@ -279,7 +279,7 @@ def main(args=None):
         epochs=args.epochs,
         verbose=1,
         callbacks=callbacks,
-        initial_epoch=arg.initial_epoch,
+        initial_epoch=args.initial_epoch,
     )
 
 if __name__ == '__main__':
