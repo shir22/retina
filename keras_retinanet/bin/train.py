@@ -92,7 +92,8 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
                 args.snapshot_path,
                 'resnet50_{dataset_type}_{{epoch:02d}}.h5'.format(dataset_type=args.dataset_type)
             ),
-            verbose=1
+            verbose=1,
+            period=args.period
         )
         checkpoint = RedirectModel(checkpoint, prediction_model)
         callbacks.append(checkpoint)
@@ -108,7 +109,8 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
         evaluation = RedirectModel(evaluation, prediction_model)
         callbacks.append(evaluation)
 
-    lr_scheduler = keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.1, patience=2, verbose=1, mode='auto', epsilon=0.0001, cooldown=0, min_lr=0)
+    patience = round(20000.0/args.steps)
+    lr_scheduler = keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.1, patience=patience, verbose=1, mode='auto', epsilon=0.0001, cooldown=0, min_lr=0)
     callbacks.append(lr_scheduler)
 
     return callbacks
@@ -215,11 +217,12 @@ def parse_args(args):
     parser.add_argument('--batch-size',    help='Size of the batches.', default=1, type=int)
     parser.add_argument('--gpu',           help='Id of the GPU to use (as reported by nvidia-smi).')
     parser.add_argument('--multi-gpu',     help='Number of GPUs to use for parallel processing.', type=int, default=0)
-    parser.add_argument('--epochs',        help='Number of epochs to train.', type=int, default=50)
-    parser.add_argument('--steps',         help='Number of steps per epoch.', type=int, default=10000)
+    parser.add_argument('--epochs',        help='Number of epochs to train.', type=int, default=200)
+    parser.add_argument('--steps',         help='Number of steps per epoch.', type=int, default=2500)
     parser.add_argument('--snapshot-path', help='Path to store snapshots of models during training (defaults to \'./snapshots\')', default='./snapshots')
+    parser.add_argument('--model-save-period', help='Number of epochs difference for saving model snapshot', dest='period', default=4)
     parser.add_argument('--no-snapshots',  help='Disable saving snapshots.', dest='snapshots', action='store_false')
-    parser.add_argument('--no-evaluation', help='Disable per epoch evaluation.', dest='evaluation', action='store_false')
+    parser.add_argument('--with-evaluation', help='Enable per epoch evaluation.', dest='evaluation', action='store_true')
 
     parser.add_argument('--gamma', help='Gamma value for focal loss.', type=float, default=2.0)
     parser.add_argument('--alpha', help='Alpha value for focal loss.', type=float, default=0.25)    
