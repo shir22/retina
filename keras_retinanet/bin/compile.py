@@ -43,7 +43,7 @@ def main(args=None):
         args = sys.argv[1:]
     args = parse_args(args)
 
-    print("compiling model {} with gamma {} and alpha {}".format(args.model_path, args.alpha, args.gamma))
+    print("compiling model {} with gamma {} and alpha {}".format(args.model_path, args.gamma, args.alpha))
     compile_model(args.model_path, args.alpha, args.gamma, args.output_path, args.lr)
 
 if __name__ == "__main__":
