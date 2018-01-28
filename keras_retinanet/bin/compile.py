@@ -35,7 +35,7 @@ def parse_args(args):
     parser.add_argument('--learning-rate', help='Initial learning rate for adam',  type=float, dest='lr', default=1e-5)
     parser.add_argument('--output-path', help='path for saving compiled model', default="")
     parser.add_argument('model_path', help='Model to compile')
-    return check_args(parser.parse_args(args))
+    return parser.parse_args(args)
 
 def main(args=None):
     # parse arguments
